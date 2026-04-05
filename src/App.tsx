@@ -8,8 +8,9 @@ import { Sidebar } from './components/Sidebar';
 import { FileList } from './components/FileList';
 import { StatusBar } from './components/StatusBar';
 import { DropZone } from './components/DropZone';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
-function App() {
+function AppContent() {
   const { refreshStatus, loadActiveRepository } = useRepoStore();
   const { loadSettings } = useSettingsStore();
 
@@ -45,4 +46,10 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
+  );
+}

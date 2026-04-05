@@ -115,7 +115,7 @@ export const useRepoStore = create<RepoState>((set, get) => ({
 
   loadActiveRepository: async () => {
     try {
-      const { loadSettings, activeRepositoryId, repositories } = useSettingsStore.getState();
+      const { activeRepositoryId, repositories } = useSettingsStore.getState();
 
       if (!activeRepositoryId) {
         // Load default or first repository

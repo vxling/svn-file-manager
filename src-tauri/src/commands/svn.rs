@@ -2,7 +2,6 @@ use log::{debug, error, info};
 use quick_xml::events::Event;
 use quick_xml::Reader;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::process::Command;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

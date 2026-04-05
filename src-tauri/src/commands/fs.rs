@@ -168,3 +168,19 @@ pub fn reveal_in_file_browser(path: String) -> Result<(), String> {
 
     Ok(())
 }
+
+/// Get workdir path for a repository name
+#[tauri::command]
+pub fn get_workdir_path(name: String) -> Result<String, String> {
+    let data_dir = dirs::data_dir()
+        .ok_or_else(|| "Failed to get data directory".to_string())?;
+    let workcopies = data_dir.join(".svnfilemanager").join("workcopies").join(&name);
+    
+    // Create directory if it doesn't exist
+    if !workcopies.exists() {
+        std::fs::create_dir_all(&workcopies)
+            .map_err(|e| format!("Failed to create workcopies directory: {}", e))?;
+    }
+    
+    Ok(workcopies.to_string_lossy().to_string())
+}

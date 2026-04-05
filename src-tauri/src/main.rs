@@ -46,6 +46,7 @@ fn main() {
             fs::read_directory,
             fs::get_file_info,
             fs::reveal_in_file_browser,
+            fs::get_workdir_path,
             // SVN commands
             svn_cmd::svn_status,
             svn_cmd::svn_info,
