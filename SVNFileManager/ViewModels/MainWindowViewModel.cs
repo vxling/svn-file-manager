@@ -205,7 +205,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         if (item == null) return;
 
-        if (item.IsDirectory)
+        var isDir = item.IsDirectory || Directory.Exists(item.FullPath);
+
+        if (isDir)
         {
             if (item.Name == "..")
             {
@@ -215,7 +217,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                     await LoadDirectoryAsync(parent.FullName);
                 }
             }
-            else
+            else if (Directory.Exists(item.FullPath))
             {
                 await LoadDirectoryAsync(item.FullPath);
             }
