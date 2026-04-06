@@ -184,11 +184,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 });
             }
 
-            // Replace entire collection to trigger UI refresh
-            Files = new ObservableCollection<FileItem>(items);
-            OnPropertyChanged(nameof(Files));
-
-            StatusText = $"{path} - {items.Count} items";
+            // Replace entire collection and notify on UI thread
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                Files = new ObservableCollection<FileItem>(items);
+                OnPropertyChanged(nameof(Files));
+                StatusText = $"{path} - {items.Count} items";
+            });
         }
         catch (Exception ex)
         {
