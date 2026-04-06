@@ -1,39 +1,23 @@
-# Dependencies
-node_modules/
-
-# Build outputs
-dist/
-build/
-*.exe
-*.dll
-*.so
-*.dylib
-
-# Tauri
-src-tauri/target/
-src-tauri/release/
-src-tauri/debug/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
+bin/
+obj/
+publish/
+*.pdb
+*.user
+*.suo
+.vs/
+*.DotSettings.user
 Thumbs.db
 
-# Logs
-*.log
-logs/
-
-# Environment
-.env
-.env.local
-.env.*.local
-
-# Cache
-*.tsbuildinfo
-vite.config.ts.timestamp-*
+# Old Tauri project
+dist/
+node_modules/
+src-tauri/
+src/
+index.html
+package*.json
+vite.config.ts
+tailwind.config.js
+postcss.config.js
+tsconfig*.json
+.github/
+SPEC.md

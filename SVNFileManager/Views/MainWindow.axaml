@@ -1,0 +1,137 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SVNFileManager.ViewModels"
+        xmlns:models="using:SVNFileManager.Models"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        x:Class="SVNFileManager.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="SVN File Manager"
+        Width="1200"
+        Height="800"
+        MinWidth="800"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen">
+
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- Toolbar -->
+    <Border Grid.Row="0" Background="#252525" Padding="8">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+          <Button Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh" Padding="12,6" Margin="2">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="↻" FontSize="16"/>
+              <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding SvnAddCommand}" ToolTip.Tip="Add unversioned files" Padding="12,6" Margin="2">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="+" FontSize="16" FontWeight="Bold"/>
+              <TextBlock Text="SVN Add" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding CommitAllCommand}" ToolTip.Tip="Commit all changes" Padding="12,6" Margin="2">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="✓" FontSize="16" Foreground="#00D26A"/>
+              <TextBlock Text="Commit" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Command="{Binding UpdateRepositoryCommand}" ToolTip.Tip="Update" Padding="12,6" Margin="2">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="↓" FontSize="16"/>
+              <TextBlock Text="Update" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+          <TextBlock Text="Auto:" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#888"/>
+          <CheckBox IsChecked="{Binding AutoCommitEnabled}" VerticalAlignment="Center" ToolTip.Tip="Auto-commit changes"/>
+          <TextBox Text="{Binding AutoCommitMessage}" Watermark="Commit message" Width="150" Margin="8,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <Border/>
+      </DockPanel>
+    </Border>
+
+    <!-- Main Content -->
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="250" MinWidth="150"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <!-- Repository List Sidebar -->
+      <Border Grid.Column="0" Background="#1E1E1E" Padding="8">
+        <DockPanel>
+          <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <Button DockPanel.Dock="Right" Command="{Binding AddRepositoryCommand}" Padding="8,4" ToolTip.Tip="Add repository">
+              <TextBlock Text="+" FontSize="18"/>
+            </Button>
+            <TextBlock Text="Repositories" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center"/>
+          </DockPanel>
+
+          <ListBox ItemsSource="{Binding Repositories}" SelectedItem="{Binding SelectedRepository}" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="models:Repository">
+                <DockPanel Margin="4">
+                  <Button DockPanel.Dock="Right"
+                          Command="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).RemoveRepositoryCommand}"
+                          CommandParameter="{Binding}"
+                          Padding="4,2"
+                          ToolTip.Tip="Remove">
+                    <TextBlock Text="×" FontSize="14" Foreground="#FF3860"/>
+                  </Button>
+                  <StackPanel>
+                    <TextBlock Text="{Binding Name}" FontWeight="Medium"/>
+                    <TextBlock Text="{Binding Path}" FontSize="10" Foreground="#666" TextTrimming="CharacterEllipsis"/>
+                  </StackPanel>
+                </DockPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </Border>
+
+      <!-- Splitter -->
+      <GridSplitter Grid.Column="1" Width="4" Background="#333"/>
+
+      <!-- File List -->
+      <Border Grid.Column="2" Background="#1A1A1A">
+        <DockPanel>
+          <!-- Path Bar -->
+          <Border DockPanel.Dock="Top" Background="#252525" Padding="12,8">
+            <DockPanel>
+              <TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" Foreground="#888" FontSize="12" VerticalAlignment="Center" Margin="8,0"/>
+              <TextBlock Text="{Binding CurrentPath}" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+            </DockPanel>
+          </Border>
+
+          <!-- File List -->
+          <ListBox ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" Background="Transparent" DoubleTapped="OnFileDoubleTapped">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="models:FileItem">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="4,2">
+                  <TextBlock Grid.Column="0" Text="{Binding SvnStatus}" Foreground="{Binding SvnStatus, Converter={x:Static vm:SvnStatusToColorConverter.Instance}}" FontWeight="Bold" FontSize="10" Width="16" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                  <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" FontSize="13" Margin="8,0"/>
+                  <TextBlock Grid.Column="2" Text="{Binding FileSize, Converter={x:Static vm:FileSizeConverter.Instance}}" Foreground="#666" FontSize="12" VerticalAlignment="Center" Width="80"/>
+                  <TextBlock Grid.Column="3" Text="{Binding LastModified, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Foreground="#666" FontSize="12" VerticalAlignment="Center" Width="140"/>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+      </Border>
+    </Grid>
+
+    <!-- Status Bar -->
+    <Border Grid.Row="2" Background="#007ACC" Padding="8,4">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Right" Text="{Binding StatusText}" Foreground="White" FontSize="12"/>
+        <TextBlock Text="{Binding Files.Count, StringFormat='{}{0} items'}" Foreground="White" FontSize="12"/>
+      </DockPanel>
+    </Border>
+  </Grid>
+</Window>
