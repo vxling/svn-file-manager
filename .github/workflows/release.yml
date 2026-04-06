@@ -36,11 +36,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev pkg-config libssl-dev libwebkit2gtk-4.1-dev
 
-      - name: Setup Tauri
-        uses: tauri-apps/setup-tauri@v0
-        with:
-          bundleWindowsLibs: ${{ matrix.platform == 'windows-2022' }}
-
       - name: Install npm packages
         run: npm ci
 
