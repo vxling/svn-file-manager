@@ -182,11 +182,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 });
             }
 
-            Files.Clear();
-            foreach (var item in items)
-            {
-                Files.Add(item);
-            }
+            // Replace entire collection to trigger UI refresh
+            Files = new ObservableCollection<FileItem>(items);
+            OnPropertyChanged(nameof(Files));
 
             StatusText = $"{path} - {items.Count} items";
         }
