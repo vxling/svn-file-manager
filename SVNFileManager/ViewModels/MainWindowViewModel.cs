@@ -203,9 +203,16 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task OpenItemAsync(FileItem? item)
     {
-        if (item == null) return;
+        if (item == null)
+        {
+            System.Diagnostics.Debug.WriteLine("[DEBUG] OpenItemAsync: item is null");
+            return;
+        }
+
+        System.Diagnostics.Debug.WriteLine($"[DEBUG] OpenItemAsync: {item.Name}, IsDirectory={item.IsDirectory}, FullPath={item.FullPath}");
 
         var isDir = item.IsDirectory || Directory.Exists(item.FullPath);
+        System.Diagnostics.Debug.WriteLine($"[DEBUG] isDir={isDir}");
 
         if (isDir)
         {
@@ -214,11 +221,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 var parent = Directory.GetParent(item.FullPath);
                 if (parent != null)
                 {
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Going to parent: {parent.FullName}");
                     await LoadDirectoryAsync(parent.FullName);
                 }
             }
             else if (Directory.Exists(item.FullPath))
             {
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Entering folder: {item.FullPath}");
                 await LoadDirectoryAsync(item.FullPath);
             }
         }
@@ -226,6 +235,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Opening file: {item.FullPath}");
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = item.FullPath,

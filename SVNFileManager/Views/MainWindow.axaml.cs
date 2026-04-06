@@ -21,13 +21,33 @@ public partial class MainWindow : Window
 
     private async void OnListBoxDoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is ListBox listBox)
+        // Find the ListBox from sender (could be the ListBox itself or a child control)
+        ListBox? listBox = null;
+        
+        if (sender is ListBox lb)
         {
-            var item = listBox.SelectedItem as FileItem;
-            if (item != null && _viewModel != null)
+            listBox = lb;
+        }
+        else if (sender is Control c)
+        {
+            // Walk up the visual tree to find the ListBox
+            while (c != null)
             {
-                await _viewModel.OpenItemCommand.ExecuteAsync(item);
+                if (c is ListBox parentLb)
+                {
+                    listBox = parentLb;
+                    break;
+                }
+                c = c.Parent as Control;
             }
+        }
+
+        if (listBox == null) return;
+
+        var item = listBox.SelectedItem as FileItem;
+        if (item != null && _viewModel != null)
+        {
+            await _viewModel.OpenItemCommand.ExecuteAsync(item);
         }
     }
 }
