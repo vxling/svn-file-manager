@@ -128,6 +128,14 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
+    partial void OnCurrentPathChanged(string value)
+    {
+        if (!string.IsNullOrEmpty(value) && Directory.Exists(value))
+        {
+            _ = LoadDirectoryAsync(value);
+        }
+    }
+
     public async Task LoadDirectoryAsync(string path)
     {
         if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return;
@@ -199,41 +207,37 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private async Task OpenItemAsync(FileItem? item)
+    private Task OpenItemAsync(FileItem? item)
     {
-        if (item == null)
-        {
-            System.Diagnostics.Debug.WriteLine("[DEBUG] OpenItemAsync: item is null");
-            return;
-        }
-
-        System.Diagnostics.Debug.WriteLine($"[DEBUG] OpenItemAsync: {item.Name}, IsDirectory={item.IsDirectory}, FullPath={item.FullPath}");
+        if (item == null) return Task.CompletedTask;
 
         var isDir = item.IsDirectory || Directory.Exists(item.FullPath);
-        System.Diagnostics.Debug.WriteLine($"[DEBUG] isDir={isDir}");
 
         if (isDir)
         {
+            string? targetPath = null;
+
             if (item.Name == "..")
             {
                 var parent = Directory.GetParent(item.FullPath);
                 if (parent != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Going to parent: {parent.FullName}");
-                    await LoadDirectoryAsync(parent.FullName);
-                }
+                    targetPath = parent.FullName;
             }
             else if (Directory.Exists(item.FullPath))
             {
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] Entering folder: {item.FullPath}");
-                await LoadDirectoryAsync(item.FullPath);
+                targetPath = item.FullPath;
+            }
+
+            if (targetPath != null)
+            {
+                // Setting CurrentPath will trigger OnCurrentPathChanged which calls LoadDirectoryAsync
+                CurrentPath = targetPath;
             }
         }
         else
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] Opening file: {item.FullPath}");
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = item.FullPath,
@@ -245,6 +249,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 StatusText = $"Error opening file: {ex.Message}";
             }
         }
+
+        return Task.CompletedTask;
     }
 
     [RelayCommand]
