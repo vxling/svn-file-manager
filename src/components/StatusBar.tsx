@@ -1,13 +1,9 @@
 import { useRepoStore } from '../stores/repoStore';
-import { useSettingsStore } from '../stores/settingsStore';
 import { Circle } from 'lucide-react';
 
 export function StatusBar() {
-  const { currentPath, svnInfo, entries, svnStatus, isWatching, isLoading } =
+  const { currentPath, svnInfo, svnStatus, isWatching, isLoading } =
     useRepoStore();
-  const { activeRepositoryId, repositories } = useSettingsStore();
-
-  const activeRepo = repositories.find((r) => r.id === activeRepositoryId);
 
   // Count files by status
   let modifiedCount = 0;

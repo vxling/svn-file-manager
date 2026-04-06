@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ChevronRight, ChevronDown, Folder } from 'lucide-react';
 import { useRepoStore, FileEntry } from '../stores/repoStore';
 
@@ -97,7 +97,7 @@ interface DirItemProps {
   onSelect: () => void;
 }
 
-function DirItem({ path, name, isExpanded, isActive, onToggle, onSelect }: DirItemProps) {
+function DirItem({ path: _path, name, isExpanded, isActive, onToggle, onSelect }: DirItemProps) {
   return (
     <div
       className={`

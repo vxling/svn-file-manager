@@ -1,12 +1,12 @@
-use log::{debug, error, info};
+use log::{debug, info};
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use std::sync::mpsc::{channel, Receiver};
-use std::sync::Mutex;
+use std::sync::mpsc::channel;
+
 use std::thread;
 use std::time::Duration;
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, State};
 
 use crate::AppState;
 
@@ -64,9 +64,8 @@ pub fn start_watching(
         .watch(watch_path, mode)
         .map_err(|e| format!("Failed to watch path: {}", e))?;
 
-    // Store watcher
-    let watcher = Mutex::new(Some(watcher));
-    *state.watcher.lock().unwrap() = Some(());
+    // Update state
+    *state.watcher_active.lock().unwrap() = true;
     *state.active_repo_path.lock().unwrap() = Some(path.clone());
 
     // Spawn thread to handle events
@@ -140,8 +139,7 @@ pub fn stop_watching(state: State<'_, AppState>) -> Result<(), String> {
 }
 
 fn stop_watching_internal(state: &State<'_, AppState>) -> Result<(), String> {
-    let mut watcher_guard = state.watcher.lock().unwrap();
-    *watcher_guard = None;
+    *state.watcher_active.lock().unwrap() = false;
     *state.active_repo_path.lock().unwrap() = None;
     info!("File watcher stopped");
     Ok(())

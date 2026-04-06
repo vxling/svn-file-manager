@@ -4,7 +4,7 @@ import { useRepoStore } from '../stores/repoStore';
 
 export function DropZone({ children }: { children: ReactNode }) {
   const [isDragging, setIsDragging] = useState(false);
-  const { loadDirectory, currentPath, svnAdd, refreshStatus } = useRepoStore();
+  const { loadDirectory, currentPath, refreshStatus } = useRepoStore();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

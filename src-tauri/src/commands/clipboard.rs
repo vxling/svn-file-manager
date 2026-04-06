@@ -1,4 +1,4 @@
-use log::{debug, error};
+use log::debug;
 
 /// Get file paths from clipboard
 /// Note: This is a placeholder - actual implementation depends on clipboard content type

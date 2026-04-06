@@ -187,7 +187,7 @@ export function ContextMenu({
 interface MenuItemProps {
   icon: React.ReactNode;
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
   disabled?: boolean;
 }
 

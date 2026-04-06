@@ -68,7 +68,7 @@ fn run_svn(args: &[&str], working_dir: Option<&str>) -> Result<String, String> {
 fn parse_status_xml(xml: &str) -> Result<SvnStatusResult, String> {
     let mut entries = Vec::new();
     let mut reader = Reader::from_str(xml);
-    reader.config_mut().trim_text(true);
+    reader.trim_text(true);
 
     let mut buf = Vec::new();
     let mut current_entry: Option<SvnStatusEntry> = None;
@@ -103,7 +103,7 @@ fn parse_status_xml(xml: &str) -> Result<SvnStatusResult, String> {
                             }
                         }
                     }
-                    "path" | "commit" | "author" | "date" | "revision" => {
+                    "path" => {
                         current_field = Some(name);
                     }
                     _ => {}
@@ -112,15 +112,8 @@ fn parse_status_xml(xml: &str) -> Result<SvnStatusResult, String> {
             Ok(Event::Text(e)) => {
                 if let Some(ref mut entry) = current_entry {
                     if let Some(field) = &current_field {
-                        let text = e.unescape().unwrap_or_default().to_string();
-                        match field.as_str() {
-                            "path" => entry.path = text,
-                            "author" => entry.author = Some(text),
-                            "date" => entry.date = Some(text),
-                            "revision" => {
-                                entry.revision = text.parse().ok();
-                            }
-                            _ => {}
+                        if field.as_str() == "path" {
+                            entry.path = e.unescape().unwrap_or_default().to_string();
                         }
                     }
                 }
@@ -131,7 +124,7 @@ fn parse_status_xml(xml: &str) -> Result<SvnStatusResult, String> {
                     if let Some(entry) = current_entry.take() {
                         entries.push(entry);
                     }
-                } else if name == "wc-status" || name == "repo-status" || name == "path" {
+                } else if name == "path" {
                     current_field = None;
                 }
             }
@@ -166,7 +159,7 @@ pub fn svn_info(path: String) -> Result<SvnInfo, String> {
     let output = run_svn(&["info", "--xml"], Some(&path))?;
 
     let mut reader = Reader::from_str(&output);
-    reader.config_mut().trim_text(true);
+    reader.trim_text(true);
 
     let mut buf = Vec::new();
     let mut info = SvnInfo {
@@ -195,7 +188,7 @@ pub fn svn_info(path: String) -> Result<SvnInfo, String> {
                             }
                         }
                     }
-                    "url" | "repository" | "wc" | "commit" | "author" | "date" => {
+                    "url" | "repository" | "root" => {
                         current_field = Some(name);
                     }
                     _ => {}
@@ -213,7 +206,7 @@ pub fn svn_info(path: String) -> Result<SvnInfo, String> {
             }
             Ok(Event::End(ref e)) => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
-                if name == "url" || name == "repository" || name == "wc" || name == "commit" {
+                if name == "url" || name == "repository" || name == "root" {
                     current_field = None;
                 }
             }
@@ -235,7 +228,7 @@ pub fn svn_update(path: String) -> Result<SvnUpdateResult, String> {
     let output = run_svn(&["update", "--xml"], Some(&path))?;
 
     let mut reader = Reader::from_str(&output);
-    reader.config_mut().trim_text(true);
+    reader.trim_text(true);
 
     let mut buf = Vec::new();
     let mut result = SvnUpdateResult {
@@ -260,7 +253,7 @@ pub fn svn_update(path: String) -> Result<SvnUpdateResult, String> {
                             }
                         }
                     }
-                    "target" | "path" | "action" => {
+                    "target" | "path" => {
                         current_field = Some(name);
                     }
                     _ => {}
@@ -268,16 +261,17 @@ pub fn svn_update(path: String) -> Result<SvnUpdateResult, String> {
             }
             Ok(Event::Text(e)) => {
                 if let Some(field) = &current_field {
-                    let text = e.unescape().unwrap_or_default().to_string();
-                    if field.as_str() == "path" && !text.is_empty() {
-                        // Determine if this was updated or skipped based on context
-                        result.updated.push(text);
+                    if field.as_str() == "path" {
+                        let text = e.unescape().unwrap_or_default().to_string();
+                        if !text.is_empty() {
+                            result.updated.push(text);
+                        }
                     }
                 }
             }
             Ok(Event::End(ref e)) => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
-                if name == "target" || name == "path" || name == "action" {
+                if name == "target" || name == "path" {
                     current_field = None;
                 }
             }
@@ -377,7 +371,7 @@ pub fn svn_log(path: String, limit: u32) -> Result<Vec<SvnLogEntry>, String> {
     )?;
 
     let mut reader = Reader::from_str(&output);
-    reader.config_mut().trim_text(true);
+    reader.trim_text(true);
 
     let mut buf = Vec::new();
     let mut entries = Vec::new();

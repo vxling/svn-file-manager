@@ -1,6 +1,5 @@
 import {
   RefreshCw,
-  Upload,
   ArrowUpDown,
   Eye,
   EyeOff,

@@ -2,25 +2,23 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
-mod svn;
 mod watcher;
 
-use commands::{fs, svn as svn_cmd, clipboard, drop_handler};
+use commands::{fs, clipboard, drop_handler, svn};
 use log::{error, info};
 use std::sync::Mutex;
-use tauri::{Manager, State};
-use watcher::FileWatcher;
+use tauri::Manager;
 
 /// Application state shared across commands
 pub struct AppState {
-    pub watcher: Mutex<Option<FileWatcher>>,
+    pub watcher_active: Mutex<bool>,
     pub active_repo_path: Mutex<Option<String>>,
 }
 
 impl Default for AppState {
     fn default() -> Self {
         Self {
-            watcher: Mutex::new(None),
+            watcher_active: Mutex::new(false),
             active_repo_path: Mutex::new(None),
         }
     }
@@ -48,15 +46,15 @@ fn main() {
             fs::reveal_in_file_browser,
             fs::get_workdir_path,
             // SVN commands
-            svn_cmd::svn_status,
-            svn_cmd::svn_info,
-            svn_cmd::svn_update,
-            svn_cmd::svn_commit,
-            svn_cmd::svn_add,
-            svn_cmd::svn_delete,
-            svn_cmd::svn_revert,
-            svn_cmd::svn_diff,
-            svn_cmd::svn_log,
+            svn::svn_status,
+            svn::svn_info,
+            svn::svn_update,
+            svn::svn_commit,
+            svn::svn_add,
+            svn::svn_delete,
+            svn::svn_revert,
+            svn::svn_diff,
+            svn::svn_log,
             // Clipboard commands
             clipboard::get_clipboard_files,
             clipboard::copy_path_to_clipboard,
