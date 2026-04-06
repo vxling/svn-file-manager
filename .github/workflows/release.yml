@@ -20,7 +20,9 @@ jobs:
             bundle: deb
           - platform: windows-2022
             target: x86_64-pc-windows-msvc
-            bundle: msi,nsis
+            bundle: 
+              - msi
+              - nsis
           - platform: macos-13
             target: x86_64-apple-darwin
             bundle: app
