@@ -40,7 +40,7 @@ jobs:
         run: npm ci
 
       - name: Build Tauri App
-        run: npm run tauri build
+        run: npx @tauri-apps/cli build
         id: tauri
 
       - name: Upload artifacts
