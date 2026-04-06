@@ -59,10 +59,20 @@ jobs:
         with:
           path: artifacts
 
+      - name: List artifacts
+        run: |
+          echo "=== Artifacts structure ==="
+          find artifacts -type f | head -30
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/**/*
+          files: |
+            artifacts/bundles-ubuntu-22.04/**/*.msi
+            artifacts/bundles-ubuntu-22.04/**/*.AppImage
+            artifacts/bundles-ubuntu-22.04/**/*.deb
+            artifacts/bundles-windows-2022/**/*.msi
+            artifacts/bundles-windows-2022/**/*.exe
           draft: false
           prerelease: false
         env:
