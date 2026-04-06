@@ -14,65 +14,48 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-22.04, windows-2022]
+        platform: [windows-latest]
 
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          node-version: 22
-          cache: npm
+          dotnet-version: 8.0.x
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Restore dependencies
+        run: dotnet restore SVNFileManager/SVNFileManager.csproj
 
-      - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev pkg-config libssl-dev libwebkit2gtk-4.1-dev
+      - name: Build
+        run: dotnet build SVNFileManager/SVNFileManager.csproj -c Release -r win-x64 --self-contained
 
-      - name: Install npm packages
-        run: npm ci
-
-      - name: Build Tauri App
-        run: npx @tauri-apps/cli build
-        id: tauri
+      - name: Publish
+        run: dotnet publish SVNFileManager/SVNFileManager.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: bundles-${{ matrix.platform }}
-          path: src-tauri/target/release/bundle/
+          name: SVNFileManager-win-x64
+          path: publish/SVNFileManager.exe
 
   release:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
+          name: SVNFileManager-win-x64
           path: artifacts
-
-      - name: List artifacts
-        run: |
-          echo "=== Artifacts structure ==="
-          find artifacts -type f | head -30
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            artifacts/bundles-ubuntu-22.04/**/*.msi
-            artifacts/bundles-ubuntu-22.04/**/*.AppImage
-            artifacts/bundles-ubuntu-22.04/**/*.deb
-            artifacts/bundles-windows-2022/**/*.msi
-            artifacts/bundles-windows-2022/**/*.exe
+          files: artifacts/*
           draft: false
           prerelease: false
         env:
