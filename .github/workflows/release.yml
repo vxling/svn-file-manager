@@ -11,12 +11,7 @@ on:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [windows-latest]
-
-    runs-on: ${{ matrix.platform }}
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,36 +21,40 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore SVNFileManager/SVNFileManager.csproj
 
       - name: Build
         run: dotnet build SVNFileManager/SVNFileManager.csproj -c Release -r win-x64 --self-contained
 
       - name: Publish
-        run: dotnet publish SVNFileManager/SVNFileManager.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o publish
+        run: dotnet publish SVNFileManager/SVNFileManager.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o ./publish
 
-      - name: Upload artifacts
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SVNFileManager-win-x64
-          path: publish/SVNFileManager.exe
+          name: SVNFileManager-exe
+          path: ./publish/SVNFileManager.exe
+          retention-days: 5
 
   release:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - name: Download artifacts
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: SVNFileManager-win-x64
-          path: artifacts
+          name: SVNFileManager-exe
+          path: ./dist
+
+      - name: List files
+        run: ls -la ./dist/
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*
+          files: ./dist/*
           draft: false
           prerelease: false
         env:
