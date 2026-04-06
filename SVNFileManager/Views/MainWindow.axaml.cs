@@ -1,4 +1,3 @@
-using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -10,7 +9,6 @@ namespace SVNFileManager.Views;
 public partial class MainWindow : Window
 {
     private MainWindowViewModel? _viewModel;
-    private DateTime _lastClickTime = DateTime.MinValue;
 
     public MainWindow()
     {
@@ -21,24 +19,14 @@ public partial class MainWindow : Window
         Closing += (_, _) => _viewModel.Dispose();
     }
 
-    private async void OnFileClicked(object? sender, PointerPressedEventArgs e)
+    private async void OnListBoxDoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is ListBox listBox && listBox.SelectedIndex >= 0)
+        if (sender is ListBox listBox)
         {
-            var items = listBox.ItemsSource as System.Collections.IList;
-            if (items != null && listBox.SelectedIndex < items.Count)
+            var item = listBox.SelectedItem as FileItem;
+            if (item != null && _viewModel != null)
             {
-                var item = items[listBox.SelectedIndex] as FileItem;
-                if (item != null && _viewModel != null)
-                {
-                    var now = DateTime.Now;
-                    if (now - _lastClickTime < TimeSpan.FromMilliseconds(500))
-                    {
-                        // Double click
-                        await _viewModel.OpenItemCommand.ExecuteAsync(item);
-                    }
-                    _lastClickTime = now;
-                }
+                await _viewModel.OpenItemCommand.ExecuteAsync(item);
             }
         }
     }

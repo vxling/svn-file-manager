@@ -134,7 +134,7 @@
           </Border>
 
           <!-- File List -->
-          <ListBox x:Name="FileListBox" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" Background="Transparent" PointerPressed="OnFileClicked">
+          <ListBox x:Name="FileListBox" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" Background="Transparent" DoubleTapped="OnListBoxDoubleTapped">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="models:FileItem">
                 <Border Padding="12,6" BorderBrush="#F0F0F0" BorderThickness="0,0,0,1">
