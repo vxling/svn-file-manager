@@ -128,13 +128,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
-    partial void OnCurrentPathChanged(string value)
-    {
-        if (!string.IsNullOrEmpty(value) && Directory.Exists(value))
-        {
-            _ = LoadDirectoryAsync(value);
-        }
-    }
+
 
     public async Task LoadDirectoryAsync(string path)
     {
@@ -206,8 +200,52 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
+    // Public method for direct invocation from code-behind
+    public void OpenItem(FileItem? item)
+    {
+        if (item == null) return;
+
+        var isDir = item.IsDirectory || Directory.Exists(item.FullPath);
+
+        if (isDir)
+        {
+            string? targetPath = null;
+
+            if (item.Name == "..")
+            {
+                var parent = Directory.GetParent(item.FullPath);
+                if (parent != null)
+                    targetPath = parent.FullName;
+            }
+            else if (Directory.Exists(item.FullPath))
+            {
+                targetPath = item.FullPath;
+            }
+
+            if (targetPath != null)
+            {
+                _ = LoadDirectoryAsync(targetPath);
+            }
+        }
+        else
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = item.FullPath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Error opening file: {ex.Message}";
+            }
+        }
+    }
+
     [RelayCommand]
-    private Task OpenItemAsync(FileItem? item)
+    private Task OpenItemAsyncInternal(FileItem? item)
     {
         if (item == null) return Task.CompletedTask;
 
@@ -230,8 +268,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
             if (targetPath != null)
             {
-                // Setting CurrentPath will trigger OnCurrentPathChanged which calls LoadDirectoryAsync
-                CurrentPath = targetPath;
+                _ = LoadDirectoryAsync(targetPath);
             }
         }
         else

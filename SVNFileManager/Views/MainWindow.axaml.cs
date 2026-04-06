@@ -24,15 +24,14 @@ public partial class MainWindow : Window
         Closing += (_, _) => _viewModel?.Dispose();
     }
 
-    private async void OnListBoxDoubleTapped(object? sender, TappedEventArgs e)
+    private void OnListBoxDoubleTapped(object? sender, RoutedEventArgs e)
     {
-        // Use the named FileListBox directly
         if (_fileListBox == null) return;
 
         var item = _fileListBox.SelectedItem as FileItem;
         if (item != null && _viewModel != null)
         {
-            await _viewModel.OpenItemCommand.ExecuteAsync(item);
+            _viewModel.OpenItem(item);
         }
     }
 }
