@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using SVNFileManager.Models;
 using SVNFileManager.ViewModels;
 
@@ -7,7 +8,7 @@ namespace SVNFileManager.Views;
 
 public partial class MainWindow : Window
 {
-    private readonly MainWindowViewModel _viewModel;
+    private MainWindowViewModel? _viewModel;
 
     public MainWindow()
     {
@@ -18,11 +19,19 @@ public partial class MainWindow : Window
         Closing += (_, _) => _viewModel.Dispose();
     }
 
-    private async void OnFileDoubleTapped(object? sender, TappedEventArgs e)
+    private async void OnFileDoubleTapped(object? sender, RoutedEventArgs e)
     {
-        if (sender is ListBox listBox && listBox.SelectedItem is FileItem item)
+        if (sender is ListBox listBox && listBox.SelectedIndex >= 0)
         {
-            await _viewModel.OpenItemCommand.ExecuteAsync(item);
+            var items = listBox.ItemsSource as System.Collections.IList;
+            if (items != null && listBox.SelectedIndex < items.Count)
+            {
+                var item = items[listBox.SelectedIndex] as FileItem;
+                if (item != null && _viewModel != null)
+                {
+                    await _viewModel.OpenItemCommand.ExecuteAsync(item);
+                }
+            }
         }
     }
 }

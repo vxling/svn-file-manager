@@ -19,15 +19,13 @@
     <!-- Top Toolbar -->
     <Border DockPanel.Dock="Top" Background="White" Padding="8,6" BoxShadow="0 1 3 #20000000">
       <Grid ColumnDefinitions="Auto,*,Auto">
-        <!-- Left: Logo + Title -->
         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
           <TextBlock Text="📁" FontSize="22"/>
           <TextBlock Text="SVN File Manager" FontSize="16" FontWeight="SemiBold" Foreground="#1A1A2E" VerticalAlignment="Center"/>
         </StackPanel>
 
-        <!-- Center: Action Buttons -->
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
-          <Button Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh (F5)" Padding="10,6" Background="Transparent" BorderThickness="0">
+          <Button Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh" Padding="10,6" Background="Transparent" BorderThickness="0">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <TextBlock Text="🔄" FontSize="14"/>
               <TextBlock Text="Refresh" Foreground="#444"/>
@@ -54,7 +52,6 @@
           </Button>
         </StackPanel>
 
-        <!-- Right: Auto-commit -->
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
           <CheckBox IsChecked="{Binding AutoCommitEnabled}" Content="Auto Commit" Foreground="#555"/>
           <TextBox Text="{Binding AutoCommitMessage}" Watermark="Commit message..." Width="140" Height="28" Background="White" BorderBrush="#D0D0D0"/>
@@ -74,12 +71,11 @@
       </Grid>
     </Border>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <Grid ColumnDefinitions="220,*">
-      <!-- Left Sidebar: Repository List -->
+      <!-- Left Sidebar -->
       <Border Grid.Column="0" Background="White" Margin="8,8,4,8" CornerRadius="8" BoxShadow="0 1 5 #15000000">
         <DockPanel Margin="12">
-          <!-- Header -->
           <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
             <Button DockPanel.Dock="Right" Command="{Binding AddRepositoryCommand}" ToolTip.Tip="Add repository" Padding="6" Background="#E3F2FD" CornerRadius="4">
               <TextBlock Text="+" FontSize="16" Foreground="#1E88E5"/>
@@ -87,7 +83,6 @@
             <TextBlock Text="Repositories" FontSize="14" FontWeight="SemiBold" Foreground="#1A1A2E" VerticalAlignment="Center"/>
           </DockPanel>
 
-          <!-- Repository List -->
           <ListBox ItemsSource="{Binding Repositories}" SelectedItem="{Binding SelectedRepository}" Background="Transparent">
             <ListBox.ItemTemplate>
               <DataTemplate x:DataType="models:Repository">
@@ -112,7 +107,7 @@
         </DockPanel>
       </Border>
 
-      <!-- Right Area: File Browser -->
+      <!-- Right Area -->
       <Border Grid.Column="1" Background="White" Margin="4,8,8,8" CornerRadius="8" BoxShadow="0 1 5 #15000000">
         <DockPanel Margin="0">
           <!-- Path Bar -->
@@ -130,7 +125,7 @@
 
           <!-- File List Header -->
           <Border DockPanel.Dock="Top" Background="#F5F7FA" Padding="12,6" BorderBrush="#E8E8E8" BorderThickness="0,0,0,1">
-            <Grid ColumnDefinitions="30,*,80,140">
+            <Grid ColumnDefinitions="40,*,90,140">
               <TextBlock Grid.Column="0" Text="" Foreground="#888" FontSize="11" FontWeight="Medium"/>
               <TextBlock Grid.Column="1" Text="Name" Foreground="#888" FontSize="11" FontWeight="Medium" VerticalAlignment="Center"/>
               <TextBlock Grid.Column="2" Text="Size" Foreground="#888" FontSize="11" FontWeight="Medium" VerticalAlignment="Center"/>
@@ -139,31 +134,25 @@
           </Border>
 
           <!-- File List -->
-          <ScrollViewer>
-            <ListBox ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" Background="Transparent" DoubleTapped="OnFileDoubleTapped">
-              <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="models:FileItem">
-                  <Border Padding="12,8" BorderBrush="#F0F0F0" BorderThickness="0,0,0,1">
-                    <Grid ColumnDefinitions="30,*,80,140">
-                      <!-- Icon -->
-                      <TextBlock Grid.Column="0" Text="{Binding IsDirectory, Converter={x:Static vm:BoolToIconConverter.Instance}}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                      <!-- Name + SVN Status -->
-                      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                        <Border Background="{Binding SvnStatus, Converter={x:Static vm:SvnStatusToColorConverter.Instance}}" CornerRadius="3" Padding="4,2" MinWidth="20" HorizontalAlignment="Center">
-                          <TextBlock Text="{Binding SvnStatus}" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="{Binding Name}" Foreground="#1A1A2E" FontSize="13" VerticalAlignment="Center"/>
-                      </StackPanel>
-                      <!-- Size -->
-                      <TextBlock Grid.Column="2" Text="{Binding FileSize, Converter={x:Static vm:FileSizeConverter.Instance}}" Foreground="#666" FontSize="12" VerticalAlignment="Center"/>
-                      <!-- Modified -->
-                      <TextBlock Grid.Column="3" Text="{Binding LastModified, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Foreground="#888" FontSize="12" VerticalAlignment="Center"/>
-                    </Grid>
-                  </Border>
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
-          </ScrollViewer>
+          <ListBox x:Name="FileListBox" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" Background="Transparent" DoubleTapped="OnFileDoubleTapped">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="models:FileItem">
+                <Border Padding="12,6" BorderBrush="#F0F0F0" BorderThickness="0,0,0,1">
+                  <Grid ColumnDefinitions="40,*,90,140">
+                    <TextBlock Grid.Column="0" Text="{Binding IsDirectory, Converter={x:Static vm:BoolToIconConverter.Instance}}" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                      <Border Background="{Binding SvnStatus, Converter={x:Static vm:SvnStatusToColorConverter.Instance}}" CornerRadius="3" Padding="5,2" MinWidth="22">
+                        <TextBlock Text="{Binding SvnStatus}" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
+                      </Border>
+                      <TextBlock Text="{Binding Name}" Foreground="#1A1A2E" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{Binding FileSize, Converter={x:Static vm:FileSizeConverter.Instance}}" Foreground="#666" FontSize="12" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="3" Text="{Binding LastModified, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" Foreground="#888" FontSize="12" VerticalAlignment="Center"/>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
         </DockPanel>
       </Border>
     </Grid>
