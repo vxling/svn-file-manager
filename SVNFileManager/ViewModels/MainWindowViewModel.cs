@@ -270,6 +270,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
             if (targetPath != null)
             {
+                Debug.WriteLine($"[DEBUG] OpenItem: stopping watcher before navigation");
+                StopWatching();  // Stop old watcher before navigating
                 Debug.WriteLine($"[DEBUG] OpenItem: calling LoadDirectoryAsync for: {targetPath}");
                 await LoadDirectoryAsync(targetPath);
                 Debug.WriteLine($"[DEBUG] OpenItem: LoadDirectoryAsync returned for: {targetPath}");
@@ -522,11 +524,21 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
+    private void StopWatching()
+    {
+        _autoRefreshTimer?.Dispose();
+        _autoRefreshTimer = null;
+        _fileWatcher.StopWatching();
+    }
+
     private void StartWatching(string path)
     {
+        // Stop existing watcher and timer first
+        _autoRefreshTimer?.Dispose();
+        _fileWatcher.StopWatching();
+
         _fileWatcher.StartWatching(path);
 
-        _autoRefreshTimer?.Dispose();
         _autoRefreshTimer = new System.Timers.Timer(10000);
         _autoRefreshTimer.Elapsed += (_, _) =>
         {
@@ -540,9 +552,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private async void OnFilesChanged(object? sender, string[] files)
     {
+        // Don't call RefreshAsync (it restarts watcher) - just reload current directory
         await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            await RefreshAsync();
+            if (!string.IsNullOrEmpty(CurrentPath))
+            {
+                await LoadDirectoryAsync(CurrentPath);
+            }
         });
     }
 
