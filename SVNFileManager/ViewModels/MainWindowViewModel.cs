@@ -211,6 +211,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             {
                 Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: on UI thread, replacing Files with {items.Count} items");
                 Files = new ObservableCollection<FileItem>(items);
+                OnPropertyChanged(nameof(Files));  // Force compiled binding to refresh
                 CurrentPath = path;
                 StatusText = $"{path} - {items.Count} items";
                 IsLoading = false;
