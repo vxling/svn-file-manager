@@ -155,7 +155,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             IsLoading = true;
             StatusText = $"Loading {path}...";
-            CurrentPath = path;
         });
 
         try
@@ -206,19 +205,16 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 });
             }
 
-            // Clear and add items on UI thread
+            // Replace entire collection on UI thread (ensures compiled bindings refresh)
             Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: marshalling to UI thread, {items.Count} items");
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
-                Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: on UI thread, clearing and adding {items.Count} items");
-                Files.Clear();
-                foreach (var item in items)
-                {
-                    Files.Add(item);
-                }
+                Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: on UI thread, replacing Files with {items.Count} items");
+                Files = new ObservableCollection<FileItem>(items);
+                CurrentPath = path;
                 StatusText = $"{path} - {items.Count} items";
                 IsLoading = false;
-                Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: UI update complete, {items.Count} items in Files");
+                Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: UI update complete, Files count={Files.Count}");
             });
         }
         catch (Exception ex)
