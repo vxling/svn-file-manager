@@ -184,11 +184,14 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 });
             }
 
-            // Replace entire collection and notify on UI thread
+            // Clear and add items individually on UI thread
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                Files = new ObservableCollection<FileItem>(items);
-                OnPropertyChanged(nameof(Files));
+                Files.Clear();
+                foreach (var item in items)
+                {
+                    Files.Add(item);
+                }
                 StatusText = $"{path} - {items.Count} items";
             });
         }
