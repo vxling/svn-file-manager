@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -66,16 +67,22 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public async Task InitializeAsync()
     {
-        IsLoading = true;
-        StatusText = "Loading configuration...";
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            IsLoading = true;
+            StatusText = "Loading configuration...";
+        });
 
         try
         {
             await _configService.LoadAsync();
             var config = _configService.Config;
 
-            AutoCommitEnabled = config.AutoCommitEnabled;
-            AutoCommitMessage = config.AutoCommitMessage;
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                AutoCommitEnabled = config.AutoCommitEnabled;
+                AutoCommitMessage = config.AutoCommitMessage;
+            });
 
             foreach (var repo in config.Repositories)
             {
@@ -98,15 +105,19 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             }
 
             var svnAvailable = await _svnService.IsSvnAvailableAsync();
-            StatusText = svnAvailable ? "Ready" : "SVN not found - some features may not work";
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = svnAvailable ? "Ready" : "SVN not found - some features may not work";
+                IsLoading = false;
+            });
         }
         catch (Exception ex)
         {
-            StatusText = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = $"Error: {ex.Message}";
+                IsLoading = false;
+            });
         }
     }
 
@@ -114,9 +125,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         if (value != null && Directory.Exists(value.Path))
         {
-            _ = LoadDirectoryAsync(value.Path);
-            StartWatching(value.Path);
-
             foreach (var repo in Repositories)
             {
                 repo.IsActive = repo.Path == value.Path;
@@ -125,6 +133,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             var config = _configService.Config;
             config.ActiveRepositoryPath = value.Path;
             _ = _configService.SaveAsync();
+
+            _ = LoadDirectoryAsync(value.Path);
+            StartWatching(value.Path);
         }
     }
 
@@ -132,15 +143,26 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public async Task LoadDirectoryAsync(string path)
     {
-        if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return;
+        Debug.WriteLine($"[DEBUG] LoadDirectoryAsync entered: {path}");
+        if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+        {
+            Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: path invalid or not exists, returning. path=[{path}]");
+            return;
+        }
 
-        IsLoading = true;
-        StatusText = $"Loading {path}...";
-        CurrentPath = path;
+        // Marshal all UI updates to UI thread
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            IsLoading = true;
+            StatusText = $"Loading {path}...";
+            CurrentPath = path;
+        });
 
         try
         {
+            Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: calling GetStatusAsync for {path}");
             var statuses = await _svnService.GetStatusAsync(path);
+            Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: GetStatusAsync returned {statuses.Count} statuses");
             var items = new List<FileItem>();
 
             var dirInfo = new DirectoryInfo(path);
@@ -184,29 +206,100 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 });
             }
 
-            // Clear and add items individually on UI thread
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            // Clear and add items on UI thread
+            Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: marshalling to UI thread, {items.Count} items");
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
+                Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: on UI thread, clearing and adding {items.Count} items");
                 Files.Clear();
                 foreach (var item in items)
                 {
                     Files.Add(item);
                 }
                 StatusText = $"{path} - {items.Count} items";
+                IsLoading = false;
+                Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: UI update complete, {items.Count} items in Files");
             });
         }
         catch (Exception ex)
         {
-            StatusText = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            IsLoading = false;
+            Debug.WriteLine($"[DEBUG] LoadDirectoryAsync EXCEPTION: {ex.GetType().Name}: {ex.Message}");
+            Debug.WriteLine($"[DEBUG] Stack: {ex.StackTrace}");
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = $"Error: {ex.Message}";
+                IsLoading = false;
+            });
         }
     }
 
     // Public method for direct invocation from code-behind
-    public void OpenItem(FileItem? item)
+    public async void OpenItem(FileItem? item)
+    {
+        Debug.WriteLine($"[DEBUG] OpenItem called: {(item != null ? item.Name : "null")}");
+        if (item == null)
+        {
+            Debug.WriteLine("[DEBUG] OpenItem: item is null, returning");
+            return;
+        }
+
+        var isDir = item.IsDirectory || Directory.Exists(item.FullPath);
+        Debug.WriteLine($"[DEBUG] OpenItem: isDir={isDir}, FullPath={item.FullPath}");
+
+        if (isDir)
+        {
+            string? targetPath = null;
+
+            if (item.Name == "..")
+            {
+                Debug.WriteLine("[DEBUG] OpenItem: handling '..' parent directory");
+                var parent = Directory.GetParent(item.FullPath);
+                if (parent != null)
+                    targetPath = parent.FullName;
+                else
+                    Debug.WriteLine("[DEBUG] OpenItem: parent is null!");
+            }
+            else if (Directory.Exists(item.FullPath))
+            {
+                targetPath = item.FullPath;
+            }
+            else
+            {
+                Debug.WriteLine($"[DEBUG] OpenItem: directory does not exist: {item.FullPath}");
+            }
+
+            if (targetPath != null)
+            {
+                Debug.WriteLine($"[DEBUG] OpenItem: calling LoadDirectoryAsync for: {targetPath}");
+                await LoadDirectoryAsync(targetPath);
+                Debug.WriteLine($"[DEBUG] OpenItem: LoadDirectoryAsync returned for: {targetPath}");
+            }
+        }
+        else
+        {
+            Debug.WriteLine($"[DEBUG] OpenItem: opening file: {item.FullPath}");
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = item.FullPath,
+                    UseShellExecute = true
+                });
+                Debug.WriteLine($"[DEBUG] OpenItem: file opened successfully");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[DEBUG] OpenItem: file open error: {ex.Message}");
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    StatusText = $"Error opening file: {ex.Message}";
+                });
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenItemAsyncInternal(FileItem? item)
     {
         if (item == null) return;
 
@@ -229,7 +322,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
             if (targetPath != null)
             {
-                _ = LoadDirectoryAsync(targetPath);
+                await LoadDirectoryAsync(targetPath);
             }
         }
         else
@@ -244,55 +337,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             }
             catch (Exception ex)
             {
-                StatusText = $"Error opening file: {ex.Message}";
-            }
-        }
-    }
-
-    [RelayCommand]
-    private Task OpenItemAsyncInternal(FileItem? item)
-    {
-        if (item == null) return Task.CompletedTask;
-
-        var isDir = item.IsDirectory || Directory.Exists(item.FullPath);
-
-        if (isDir)
-        {
-            string? targetPath = null;
-
-            if (item.Name == "..")
-            {
-                var parent = Directory.GetParent(item.FullPath);
-                if (parent != null)
-                    targetPath = parent.FullName;
-            }
-            else if (Directory.Exists(item.FullPath))
-            {
-                targetPath = item.FullPath;
-            }
-
-            if (targetPath != null)
-            {
-                _ = LoadDirectoryAsync(targetPath);
-            }
-        }
-        else
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    FileName = item.FullPath,
-                    UseShellExecute = true
+                    StatusText = $"Error opening file: {ex.Message}";
                 });
             }
-            catch (Exception ex)
-            {
-                StatusText = $"Error opening file: {ex.Message}";
-            }
         }
-
-        return Task.CompletedTask;
     }
 
     [RelayCommand]
@@ -369,22 +419,34 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         if (SelectedRepository == null) return;
 
-        IsLoading = true;
-        StatusText = "Committing all changes...";
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            IsLoading = true;
+            StatusText = "Committing all changes...";
+        });
 
         try
         {
             var result = await _svnService.CommitAsync(SelectedRepository.Path, AutoCommitMessage);
-            StatusText = result ? "Commit successful" : "Commit failed";
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = result ? "Commit successful" : "Commit failed";
+            });
             await RefreshAsync();
         }
         catch (Exception ex)
         {
-            StatusText = $"Commit error: {ex.Message}";
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = $"Commit error: {ex.Message}";
+            });
         }
         finally
         {
-            IsLoading = false;
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsLoading = false;
+            });
         }
     }
 
@@ -393,22 +455,34 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         if (SelectedRepository == null) return;
 
-        IsLoading = true;
-        StatusText = "Updating repository...";
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            IsLoading = true;
+            StatusText = "Updating repository...";
+        });
 
         try
         {
             var result = await _svnService.UpdateAsync(SelectedRepository.Path);
-            StatusText = result ? "Update successful" : "Update failed";
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = result ? "Update successful" : "Update failed";
+            });
             await RefreshAsync();
         }
         catch (Exception ex)
         {
-            StatusText = $"Update error: {ex.Message}";
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = $"Update error: {ex.Message}";
+            });
         }
         finally
         {
-            IsLoading = false;
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsLoading = false;
+            });
         }
     }
 
@@ -417,22 +491,34 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         if (SelectedRepository == null) return;
 
-        IsLoading = true;
-        StatusText = "Adding unversioned files...";
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            IsLoading = true;
+            StatusText = "Adding unversioned files...";
+        });
 
         try
         {
             var result = await _svnService.SvnAddRecursiveAsync(SelectedRepository.Path);
-            StatusText = result.exitCode == 0 ? "Files added" : $"Add failed: {result.output}";
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = result.exitCode == 0 ? "Files added" : $"Add failed: {result.output}";
+            });
             await RefreshAsync();
         }
         catch (Exception ex)
         {
-            StatusText = $"Add error: {ex.Message}";
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                StatusText = $"Add error: {ex.Message}";
+            });
         }
         finally
         {
-            IsLoading = false;
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsLoading = false;
+            });
         }
     }
 
@@ -442,7 +528,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         _autoRefreshTimer?.Dispose();
         _autoRefreshTimer = new System.Timers.Timer(10000);
-        _autoRefreshTimer.Elapsed += async (_, _) => await RefreshAsync();
+        _autoRefreshTimer.Elapsed += (_, _) =>
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(async () =>
+            {
+                await RefreshAsync();
+            });
+        };
         _autoRefreshTimer.Start();
     }
 
