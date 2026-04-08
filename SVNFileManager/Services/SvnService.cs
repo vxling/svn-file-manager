@@ -211,4 +211,34 @@ public class SvnService
         var result = await RunCommandAsync($"add --force --non-interactive \"{directoryPath}\"");
         return (result.output, result.exitCode);
     }
+
+    /// <summary>
+    /// Checkout a remote SVN repository to a local path.
+    /// </summary>
+    /// <param name="url">Remote repository URL</param>
+    /// <param name="localPath">Local checkout destination</param>
+    /// <param name="username">SVN username (optional)</param>
+    /// <param name="password">SVN password (optional)</param>
+    /// <returns>(output, exitCode)</returns>
+    public async Task<(string output, int exitCode)> CheckoutAsync(
+        string url,
+        string localPath,
+        string? username = null,
+        string? password = null)
+    {
+        var args = $"checkout --non-interactive \"{url}\" \"{localPath}\"";
+        if (!string.IsNullOrEmpty(username))
+        {
+            args = $"--username \"{username}\" " + args;
+            // NOTE: password is passed via --passwordcmd or prompt is shown by svn
+            // For interactive password, we rely on svn caching credentials in %APPDATA%\Subversion\auth
+            if (!string.IsNullOrEmpty(password))
+            {
+                args = $"--password \"{password}\" " + args;
+            }
+        }
+
+        var result = await RunCommandAsync(args);
+        return (result.output + (string.IsNullOrEmpty(result.error) ? "" : $"\nError: {result.error}"), result.exitCode);
+    }
 }

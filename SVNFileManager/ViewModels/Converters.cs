@@ -64,3 +64,41 @@ public class BoolToIconConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+public class BoolToErrorBgConverter : IValueConverter
+{
+    public static readonly BoolToErrorBgConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is bool hasError)
+        {
+            return hasError ? "#FFEBEE" : "#E8F5E9";
+        }
+        return "#F5F5F5";
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class BoolToErrorFgConverter : IValueConverter
+{
+    public static readonly BoolToErrorFgConverter Instance = new();
+
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is bool hasError)
+        {
+            return hasError ? "#E53935" : "#00A650";
+        }
+        return "#333333";
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}

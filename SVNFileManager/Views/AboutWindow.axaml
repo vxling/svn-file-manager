@@ -1,0 +1,73 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="320"
+        x:Class="SVNFileManager.Views.AboutWindow"
+        Title="关于"
+        Width="400"
+        Height="320"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        Background="#F0F4F8">
+
+  <DockPanel Margin="0">
+    <!-- Bottom close button -->
+    <Border DockPanel.Dock="Bottom"
+            Background="White"
+            Padding="24,16"
+            BorderBrush="#E8E8E8"
+            BorderThickness="0,1,0,0">
+      <Button Content="关闭"
+              Padding="24,8"
+              HorizontalAlignment="Center"
+              Click="OnCloseClick"/>
+    </Border>
+
+    <!-- Content -->
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="16">
+      <!-- Logo / Icon -->
+      <Border Background="#1E88E5" Width="64" Height="64" CornerRadius="12">
+        <TextBlock Text="[S]"
+                   FontSize="28"
+                   FontWeight="Bold"
+                   Foreground="White"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"/>
+      </Border>
+
+      <!-- App name -->
+      <StackPanel HorizontalAlignment="Center" Spacing="4">
+        <TextBlock Text="SVN File Manager"
+                   FontSize="20"
+                   FontWeight="Bold"
+                   Foreground="#1A1A2E"
+                   HorizontalAlignment="Center"/>
+        <TextBlock Text="版本 1.0.0"
+                   FontSize="13"
+                   Foreground="#888888"
+                   HorizontalAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Description -->
+      <TextBlock Text="内置 SVN 版本控制的文件管理器"
+                 FontSize="13"
+                 Foreground="#555555"
+                 HorizontalAlignment="Center"
+                 TextWrapping="Wrap"
+                 MaxWidth="320"/>
+
+      <!-- Tech stack -->
+      <StackPanel HorizontalAlignment="Center" Spacing="4">
+        <TextBlock Text="基于 Avalonia 11 + .NET 8"
+                   FontSize="11"
+                   Foreground="#AAAAAA"
+                   HorizontalAlignment="Center"/>
+        <TextBlock Text="GitHub: vxling/svn-file-manager"
+                   FontSize="11"
+                   Foreground="#1E88E5"
+                   HorizontalAlignment="Center"/>
+      </StackPanel>
+    </StackPanel>
+  </DockPanel>
+</Window>

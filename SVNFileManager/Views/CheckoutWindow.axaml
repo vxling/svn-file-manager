@@ -1,0 +1,114 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SVNFileManager.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="480"
+        x:Class="SVNFileManager.Views.CheckoutWindow"
+        x:DataType="vm:CheckoutWindowViewModel"
+        Title="从网络检出 SVN 仓库"
+        Width="500"
+        Height="480"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        Background="#F0F4F8">
+
+  <DockPanel Margin="24">
+    <!-- Header -->
+    <TextBlock DockPanel.Dock="Top"
+               Text="从网络检出仓库"
+               FontSize="18"
+               FontWeight="SemiBold"
+               Foreground="#1A1A2E"
+               Margin="0,0,0,20"/>
+
+    <!-- Status at bottom -->
+    <Border DockPanel.Dock="Bottom"
+            Background="{Binding HasError, Converter={StaticResource BoolToErrorBgConverter}}"
+            Padding="12,10"
+            Margin="0,16,0,0"
+            IsVisible="{Binding StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+      <TextBlock Text="{Binding StatusText}"
+                 Foreground="{Binding HasError, Converter={StaticResource BoolToErrorFgConverter}}"
+                 FontSize="12"
+                 TextWrapping="Wrap"/>
+    </Border>
+
+    <!-- Form -->
+    <StackPanel Spacing="16">
+      <!-- Repository Name -->
+      <StackPanel Spacing="6">
+        <TextBlock Text="仓库名称" FontSize="13" Foreground="#333"/>
+        <TextBox Text="{Binding RepoName}"
+                 Watermark="例如: my-project"
+                 Height="36"
+                 IsEnabled="{Binding !IsCheckingOut}"/>
+        <TextBlock Text="用于生成本地路径: ~/.svnfilemanager/workcopies/{仓库名称}/"
+                   FontSize="10"
+                   Foreground="#888"/>
+      </StackPanel>
+
+      <!-- Repository URL -->
+      <StackPanel Spacing="6">
+        <TextBlock Text="仓库 URL" FontSize="13" Foreground="#333"/>
+        <TextBox Text="{Binding RepoUrl}"
+                 Watermark="例如: https://svn.example.com/repos/my-project"
+                 Height="36"
+                 IsEnabled="{Binding !IsCheckingOut}"/>
+        <TextBlock Text="支持: http://, https://, svn://, svn+ssh://"
+                   FontSize="10"
+                   Foreground="#888"/>
+      </StackPanel>
+
+      <!-- Username -->
+      <StackPanel Spacing="6">
+        <TextBlock Text="用户名" FontSize="13" Foreground="#333"/>
+        <TextBox Text="{Binding Username}"
+                 Watermark="（可选）"
+                 Height="36"
+                 IsEnabled="{Binding !IsCheckingOut}"/>
+      </StackPanel>
+
+      <!-- Password -->
+      <StackPanel Spacing="6">
+        <TextBlock Text="密码" FontSize="13" Foreground="#333"/>
+        <TextBox Text="{Binding Password}"
+                 Watermark="（可选）"
+                 Height="36"
+                 PasswordChar="*"
+                 IsEnabled="{Binding !IsCheckingOut}"/>
+      </StackPanel>
+
+      <!-- Progress -->
+      <StackPanel Orientation="Horizontal"
+                  Spacing="10"
+                  IsVisible="{Binding IsCheckingOut}">
+        <TextBlock Text="正在检出..." FontSize="12" Foreground="#555" VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Success indicator -->
+      <StackPanel Orientation="Horizontal"
+                  Spacing="8"
+                  IsVisible="{Binding IsSuccess}">
+        <TextBlock Text="✓" FontSize="16" Foreground="#00A650" VerticalAlignment="Center"/>
+        <TextBlock Text="检出成功！" FontSize="13" Foreground="#00A650" VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Buttons -->
+      <StackPanel Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="12"
+                  Margin="0,8,0,0">
+        <Button x:Name="CancelButton"
+                Content="取消"
+                Padding="20,8"/>
+        <Button x:Name="CheckoutButton"
+                Content="检出"
+                Padding="20,8"
+                Background="#1E88E5"
+                Foreground="White"
+                IsEnabled="{Binding CanCheckout}"/>
+      </StackPanel>
+    </StackPanel>
+  </DockPanel>
+</Window>

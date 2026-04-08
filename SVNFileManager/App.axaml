@@ -2,8 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="SVNFileManager.App"
              xmlns:local="using:SVNFileManager"
+             xmlns:vm="using:SVNFileManager.ViewModels"
              RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.Resources>
+        <vm:BoolToErrorBgConverter x:Key="BoolToErrorBgConverter"/>
+        <vm:BoolToErrorFgConverter x:Key="BoolToErrorFgConverter"/>
+    </Application.Resources>
 
     <Application.DataTemplates>
         <local:ViewLocator/>

@@ -47,6 +47,15 @@ public class AppConfig
     [JsonPropertyName("autoRefreshIntervalSeconds")]
     public int AutoRefreshIntervalSeconds { get; set; } = 10;
 
+    [JsonPropertyName("autoRefreshEnabled")]
+    public bool AutoRefreshEnabled { get; set; } = true;
+
+    [JsonPropertyName("theme")]
+    public int Theme { get; set; } = 0; // 0=System, 1=Light, 2=Dark
+
+    [JsonPropertyName("watchPathFilter")]
+    public string WatchPathFilter { get; set; } = "";
+
     [JsonPropertyName("autoCommitEnabled")]
     public bool AutoCommitEnabled { get; set; } = false;
 

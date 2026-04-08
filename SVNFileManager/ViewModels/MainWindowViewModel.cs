@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SVNFileManager.Models;
 using SVNFileManager.Services;
+using SVNFileManager.Views;
 
 namespace SVNFileManager.ViewModels;
 
@@ -184,7 +185,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                     Name = dir.Name,
                     FullPath = dir.FullName,
                     IsDirectory = true,
-                    SvnStatus = status
+                    SvnStatus = status,
+                    LastModified = dir.LastWriteTime
                 });
             }
 
@@ -205,17 +207,17 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 });
             }
 
-            // Replace entire collection on UI thread (ensures compiled bindings refresh)
-            Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: marshalling to UI thread, {items.Count} items");
+            // Clear and add items individually - more reliable with Avalonia compiled bindings
             await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
             {
-                Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: on UI thread, replacing Files with {items.Count} items");
-                Files = new ObservableCollection<FileItem>(items);
-                OnPropertyChanged(nameof(Files));  // Force compiled binding to refresh
+                Files.Clear();
+                foreach (var fileItem in items)
+                {
+                    Files.Add(fileItem);
+                }
                 CurrentPath = path;
                 StatusText = $"{path} - {items.Count} items";
                 IsLoading = false;
-                Debug.WriteLine($"[DEBUG] LoadDirectoryAsync: UI update complete, Files count={Files.Count}");
             });
         }
         catch (Exception ex)
@@ -249,12 +251,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
             if (item.Name == "..")
             {
-                Debug.WriteLine("[DEBUG] OpenItem: handling '..' parent directory");
-                var parent = Directory.GetParent(item.FullPath);
-                if (parent != null)
-                    targetPath = parent.FullName;
-                else
-                    Debug.WriteLine("[DEBUG] OpenItem: parent is null!");
+                // item.FullPath is already the parent directory
+                targetPath = item.FullPath;
             }
             else if (Directory.Exists(item.FullPath))
             {
@@ -310,9 +308,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
             if (item.Name == "..")
             {
-                var parent = Directory.GetParent(item.FullPath);
-                if (parent != null)
-                    targetPath = parent.FullName;
+                // item.FullPath is already the parent directory
+                targetPath = item.FullPath;
             }
             else if (Directory.Exists(item.FullPath))
             {
@@ -382,6 +379,70 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
                 StatusText = $"Added repository: {name}";
             }
+        }
+    }
+
+    [RelayCommand]
+    private async Task CheckoutAsync()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var dialog = new CheckoutWindow();
+            var viewModel = new CheckoutWindowViewModel(async (result) =>
+            {
+                if (result.Success)
+                {
+                    // Add to repository list
+                    var repo = new Repository
+                    {
+                        Name = result.RepoName,
+                        Path = result.LocalPath,
+                        Url = result.Url,
+                        Username = result.Username,
+                        IsActive = true
+                    };
+
+                    foreach (var r in Repositories)
+                        r.IsActive = false;
+
+                    Repositories.Add(repo);
+                    SelectedRepository = repo;
+
+                    var config = _configService.Config;
+                    config.Repositories = Repositories.ToList();
+                    await _configService.SaveAsync();
+
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        dialog.Close();
+                        StatusText = $"Added repository from network: {result.RepoName}";
+                    });
+                }
+            });
+            dialog.DataContext = viewModel;
+
+            await dialog.ShowDialog(desktop.MainWindow!);
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenSettingsAsync()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var dialog = new SettingsWindow();
+            dialog.DataContext = new SettingsWindowViewModel(_configService);
+            await dialog.ShowDialog(desktop.MainWindow!);
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenAboutAsync()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            var dialog = new AboutWindow();
+            await dialog.ShowDialog(desktop.MainWindow!);
         }
     }
 

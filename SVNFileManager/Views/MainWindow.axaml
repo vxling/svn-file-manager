@@ -69,11 +69,37 @@
         <DockPanel>
           <!-- Header -->
           <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-            <Button DockPanel.Dock="Right" Command="{Binding AddRepositoryCommand}" ToolTip.Tip="Add repository" Padding="6" Background="#E3F2FD">
-              <TextBlock Text="+" FontSize="16" Foreground="#1E88E5"/>
-            </Button>
             <TextBlock Text="Repositories" FontSize="14" FontWeight="SemiBold" Foreground="#1A1A2E" VerticalAlignment="Center"/>
           </DockPanel>
+
+          <!-- Action Buttons -->
+          <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,12">
+            <Button Content="添加本地仓库"
+                    Command="{Binding AddRepositoryCommand}"
+                    Padding="8,7"
+                    Background="#E3F2FD"
+                    Foreground="#1E88E5"
+                    FontSize="12"/>
+            <Button Content="从网络检出"
+                    Command="{Binding CheckoutCommand}"
+                    Padding="8,7"
+                    Background="#E3F2FD"
+                    Foreground="#1E88E5"
+                    FontSize="12"/>
+            <Border Height="1" Background="#E0E0E0" Margin="0,4"/>
+            <Button Content="配置"
+                    Command="{Binding OpenSettingsCommand}"
+                    Padding="8,7"
+                    Background="Transparent"
+                    Foreground="#555"
+                    FontSize="12"/>
+            <Button Content="关于"
+                    Command="{Binding OpenAboutCommand}"
+                    Padding="8,7"
+                    Background="Transparent"
+                    Foreground="#555"
+                    FontSize="12"/>
+          </StackPanel>
 
           <!-- Repository List -->
           <ListBox ItemsSource="{Binding Repositories}" SelectedItem="{Binding SelectedRepository}" Background="Transparent">

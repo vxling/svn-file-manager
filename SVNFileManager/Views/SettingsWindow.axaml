@@ -1,0 +1,128 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SVNFileManager.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="550"
+        x:Class="SVNFileManager.Views.SettingsWindow"
+        x:DataType="vm:SettingsWindowViewModel"
+        Title="配置"
+        Width="600"
+        Height="550"
+        WindowStartupLocation="CenterScreen"
+        Background="#F0F4F8">
+
+  <DockPanel Margin="0">
+    <!-- Header -->
+    <Border DockPanel.Dock="Top" Background="White" Padding="24,16" BorderBrush="#E8E8E8" BorderThickness="0,0,0,1">
+      <TextBlock Text="配置" FontSize="18" FontWeight="SemiBold" Foreground="#1A1A2E"/>
+    </Border>
+
+    <!-- Bottom buttons -->
+    <Border DockPanel.Dock="Bottom" Background="White" Padding="24,16" BorderBrush="#E8E8E8" BorderThickness="0,1,0,0">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+        <Button x:Name="CancelButton" Content="取消" Padding="20,8"/>
+        <Button x:Name="SaveButton" Content="保存" Padding="20,8" Background="#1E88E5" Foreground="White"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Settings content -->
+    <ScrollViewer>
+      <StackPanel Margin="24" Spacing="24">
+
+        <!-- File Watch -->
+        <StackPanel Spacing="12">
+          <TextBlock Text="文件监视" FontSize="15" FontWeight="SemiBold" Foreground="#1A1A2E"/>
+
+          <Border Background="White" Padding="16" CornerRadius="6" BorderBrush="#E0E0E0" BorderThickness="1">
+            <StackPanel Spacing="12">
+              <!-- Auto sync interval -->
+              <Grid ColumnDefinitions="160,*">
+                <TextBlock Grid.Column="0" Text="自动同步间隔" FontSize="13" Foreground="#333" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                  <NumericUpDown Value="{Binding AutoSyncIntervalMinutes}"
+                                 Minimum="1" Maximum="60"
+                                 Width="100" Height="32"/>
+                  <TextBlock Text="分钟" FontSize="13" Foreground="#555" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Grid>
+
+              <!-- Watch path filter -->
+              <Grid ColumnDefinitions="160,*">
+                <TextBlock Grid.Column="0" Text="路径过滤（glob）" FontSize="13" Foreground="#333" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1" Text="{Binding WatchPathFilter}"
+                         Watermark="例如: *.log, *.tmp, node_modules/"
+                         Height="32"/>
+              </Grid>
+
+              <!-- Auto refresh toggle -->
+              <Grid ColumnDefinitions="160,*">
+                <TextBlock Grid.Column="0" Text="启用文件监控" FontSize="13" Foreground="#333" VerticalAlignment="Center"/>
+                <CheckBox Grid.Column="1" IsChecked="{Binding AutoRefreshEnabled}" VerticalAlignment="Center"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- Auto Commit -->
+        <StackPanel Spacing="12">
+          <TextBlock Text="自动提交" FontSize="15" FontWeight="SemiBold" Foreground="#1A1A2E"/>
+
+          <Border Background="White" Padding="16" CornerRadius="6" BorderBrush="#E0E0E0" BorderThickness="1">
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="160,*">
+                <TextBlock Grid.Column="0" Text="启用自动提交" FontSize="13" Foreground="#333" VerticalAlignment="Center"/>
+                <CheckBox Grid.Column="1" IsChecked="{Binding AutoCommitEnabled}" VerticalAlignment="Center"/>
+              </Grid>
+
+              <Grid ColumnDefinitions="160,*">
+                <TextBlock Grid.Column="0" Text="提交信息模板" FontSize="13" Foreground="#333" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1" Text="{Binding AutoCommitMessage}" Height="32"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- Appearance -->
+        <StackPanel Spacing="12">
+          <TextBlock Text="外观" FontSize="15" FontWeight="SemiBold" Foreground="#1A1A2E"/>
+
+          <Border Background="White" Padding="16" CornerRadius="6" BorderBrush="#E0E0E0" BorderThickness="1">
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="160,*">
+                <TextBlock Grid.Column="0" Text="主题" FontSize="13" Foreground="#333" VerticalAlignment="Center"/>
+                <ComboBox Grid.Column="1"
+                          SelectedIndex="{Binding ThemeIndex}"
+                          Width="160"
+                          Height="32">
+                  <ComboBoxItem Content="跟随系统"/>
+                  <ComboBoxItem Content="浅色"/>
+                  <ComboBoxItem Content="深色"/>
+                </ComboBox>
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- SVN -->
+        <StackPanel Spacing="12">
+          <TextBlock Text="SVN" FontSize="15" FontWeight="SemiBold" Foreground="#1A1A2E"/>
+
+          <Border Background="White" Padding="16" CornerRadius="6" BorderBrush="#E0E0E0" BorderThickness="1">
+            <StackPanel Spacing="12">
+              <Grid ColumnDefinitions="160,*">
+                <TextBlock Grid.Column="0" Text="凭证管理" FontSize="13" Foreground="#333" VerticalAlignment="Center"/>
+                <Button x:Name="ManageCredsButton"
+                        Grid.Column="1"
+                        Content="管理已保存的凭证"
+                        Padding="12,6"
+                        HorizontalAlignment="Left"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</Window>
